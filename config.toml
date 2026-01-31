@@ -1,0 +1,21 @@
+# Server listen address
+listen_addr = "0.0.0.0:8080"
+
+# Concurrency limit
+max_concurrent_downloads = 5
+
+# Cookies (exported from browser)
+cookies_file = "cookies.txt"
+cookies_browser = "edge"
+cookies_refresh_max_age_secs = 1800
+
+# yt-dlp runtime
+ytdlp_bin = "/opt/anaconda3/bin/yt-dlp"
+ytdlp_path = "/opt/anaconda3/bin:/Users/jlu/.nvm/versions/node/v22.19.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+# YouTube access may require a proxy. Prefer explicit proxy:
+ytdlp_proxy = "socks5://127.0.0.1:7890"
+
+# If true, let yt-dlp inherit http_proxy/https_proxy from the service environment.
+inherit_proxy_env = false
+ffmpeg_bin = "/opt/homebrew/bin/ffmpeg"
