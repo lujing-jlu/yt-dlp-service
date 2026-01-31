@@ -39,9 +39,11 @@ struct AppConfigFile {
 }
 
 fn default_ytdlp_path() -> String {
-    // Keep your previous defaults; editable via config.toml.
-    "/opt/anaconda3/bin:/Users/jlu/.nvm/versions/node/v22.19.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-        .to_string()
+    // Prefer inheriting PATH from the service process; override via config.toml when needed
+    // (e.g. to include Homebrew, ffmpeg, node from nvm, etc).
+    std::env::var("PATH").unwrap_or_else(|_| {
+        "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin".to_string()
+    })
 }
 
 impl AppConfig {
@@ -64,7 +66,7 @@ impl AppConfig {
             cookies_browser: file.cookies_browser.unwrap_or_else(|| "edge".to_string()),
             cookies_refresh_max_age_secs: file.cookies_refresh_max_age_secs.unwrap_or(1800),
 
-            ytdlp_bin: PathBuf::from(file.ytdlp_bin.unwrap_or_else(|| "/opt/anaconda3/bin/yt-dlp".to_string())),
+            ytdlp_bin: PathBuf::from(file.ytdlp_bin.unwrap_or_else(|| "yt-dlp".to_string())),
             ytdlp_path: file.ytdlp_path.unwrap_or_else(default_ytdlp_path),
             ffmpeg_bin: file.ffmpeg_bin.and_then(|s| {
                 let s = s.trim().to_string();

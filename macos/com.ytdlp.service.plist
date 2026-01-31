@@ -7,9 +7,9 @@
 
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/jlu/bin/yt_dlp_service</string>
+    <string>__BIN__</string>
     <string>--config</string>
-    <string>/Users/jlu/projects/ytdownload/yt-dlp-service/config.toml</string>
+    <string>__CONFIG__</string>
   </array>
 
   <key>RunAtLoad</key>
@@ -19,7 +19,7 @@
   <true/>
 
   <key>WorkingDirectory</key>
-  <string>/Users/jlu/projects/ytdownload/yt-dlp-service</string>
+  <string>__WORKDIR__</string>
 
   <key>StandardOutPath</key>
   <string>/tmp/ytdlp-service.log</string>

@@ -1,1 +1,17 @@
-/target
+/target/
+
+# Local config / secrets
+config.toml
+cookies.txt
+cookies.txt.bak
+
+# Logs / output
+*.log
+*.mp4
+*.mkv
+*.webm
+*.part
+*.ytdl
+
+# macOS
+.DS_Store

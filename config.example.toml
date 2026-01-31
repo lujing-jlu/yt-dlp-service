@@ -10,8 +10,10 @@ cookies_browser = "edge"
 cookies_refresh_max_age_secs = 1800
 
 # yt-dlp runtime
-ytdlp_bin = "/opt/anaconda3/bin/yt-dlp"
-ytdlp_path = "/opt/anaconda3/bin:/Users/jlu/.nvm/versions/node/v22.19.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+ytdlp_bin = "yt-dlp"
+# Make sure this PATH contains: yt-dlp, node (for yt-dlp-ejs), and optionally ffmpeg.
+# Note: LaunchAgent's default PATH is usually minimal; include Homebrew paths if needed.
+ytdlp_path = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 # ffmpeg is required for mode=best (merge bestvideo+bestaudio).
 # If ffmpeg isn't on PATH for LaunchAgent, set an absolute path here.

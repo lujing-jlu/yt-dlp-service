@@ -4,7 +4,7 @@
 
 set -e
 
-SERVER="${YT_DLP_SERVER:-http://192.168.50.134:8080}"
+SERVER="${YT_DLP_SERVER:-http://127.0.0.1:8080}"
 URL="$1"
 OUTPUT_NAME="$2"
 MODE="${3:-${YT_DLP_MODE:-progressive}}"
@@ -13,7 +13,7 @@ usage() {
     echo "用法: $0 <youtube_url> [output_name] [mode]"
     echo ""
     echo "环境变量:"
-    echo "  YT_DLP_SERVER  服务地址 (默认: http://192.168.50.134:8080)"
+    echo "  YT_DLP_SERVER  服务地址 (默认: http://127.0.0.1:8080)"
     echo "  YT_DLP_MODE    下载模式 (默认: progressive)"
     echo ""
     echo "示例:"
