@@ -8,6 +8,11 @@
 
 见 `API.md`。
 
+## 封面提取
+
+支持提取封面图（thumbnail）：
+- `POST /thumbnail`：返回图片文件（jpg/png/webp 之一；若可用 ffmpeg 会优先转换为 jpg）
+
 ## 配置（config.toml）
 
 服务启动时会读取工作目录 `config.toml`，也可用 `--config /path/to/config.toml` 指定。
@@ -52,4 +57,3 @@ tail -f /tmp/ytdlp-service.log
 ## 免责声明
 
 请遵守目标网站/平台的服务条款与当地法律法规。本项目仅用于技术研究与自有内容处理。
-

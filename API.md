@@ -80,3 +80,27 @@ curl -L -X POST http://localhost:8080/download \
   -d '{"url":"https://www.youtube.com/watch?v=VIDEO_ID","mode":"best"}' \
   -o video.mp4
 ```
+
+## 3. 提取封面（thumbnail）
+
+```
+POST /thumbnail
+Content-Type: application/json
+
+{
+  "url": "https://www.youtube.com/watch?v=VIDEO_ID"
+}
+```
+
+说明：
+- 服务端使用 yt-dlp 下载封面图，并以图片文件（jpg/png/webp 之一）返回。
+- 如果找到 ffmpeg，会优先转换为 jpg；否则返回 yt-dlp 下载到的原始格式。
+- 连接断开后会清理临时文件。
+
+示例：
+```bash
+curl -L -X POST http://localhost:8080/thumbnail \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://www.youtube.com/watch?v=VIDEO_ID"}' \
+  -o thumbnail.jpg
+```

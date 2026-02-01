@@ -65,6 +65,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(state.clone())
             .service(web::resource("/").route(web::get().to(handlers::index)))
             .service(web::resource("/download").route(web::post().to(handlers::stream_direct)))
+            .service(web::resource("/thumbnail").route(web::post().to(handlers::thumbnail)))
     })
     .bind(bind_addr.as_str())?
     .run()
