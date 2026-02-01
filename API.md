@@ -1,12 +1,16 @@
 # YouTube Download Service API
 
-目标：给其他服务调用的“单请求下载并返回 MP4”接口；请求方只需要把响应保存成 `.mp4`。
+目标：给其他服务调用的“单请求下载并返回 MP4/封面”接口；请求方只需要把响应保存成文件。
 
 ## 服务地址
 
-```
-http://localhost:8080
-```
+默认：`http://localhost:8080`（可通过 `config.toml` 的 `listen_addr` 配置）
+
+## 端点列表
+
+- `GET /`：健康检查
+- `POST /download`：下载视频并返回 MP4
+- `POST /thumbnail`：提取封面并返回图片
 
 ## 1. 健康检查
 
@@ -33,11 +37,15 @@ Content-Type: application/json
 - `mode=progressive` 使用单文件格式（通常更稳，但清晰度可能不如 best）。
 - `mode=best` 追求最佳画质（服务端会下载并合并后再传输），需要 `ffmpeg`；可在 `config.toml` 里配置 `ffmpeg_bin`。
 
+响应：
+- 成功：`200`，`Content-Type: video/mp4`
+- 失败：`4xx/5xx`，返回 JSON（见“失败响应”）
+
 ## 配置文件
 
 服务默认读取工作目录 `config.toml`，也可用 `--config /path/to/config.toml` 指定。
 
-参考模板：`yt-dlp-service/config.example.toml`
+参考模板：`config.example.toml`
 
 常用配置项（示例）：
 ```toml
@@ -55,13 +63,18 @@ ffmpeg_bin = "/opt/homebrew/bin/ffmpeg"
 
 ## 失败响应
 
-当下载失败时，服务会返回 JSON（而不是 MP4），例如：
+当下载失败时，服务会返回 JSON（而不是 MP4/图片），例如：
 ```json
 {
   "error": "yt-dlp exited with error (status=...)",
   "stderr_tail": "..."
 }
 ```
+
+常见 HTTP 状态码：
+- `400`：请求参数错误（如 url/mode 不合法，或 mode=best 但缺少 ffmpeg）
+- `429`：并发下载超过上限（`max_concurrent_downloads`）
+- `502`：yt-dlp 失败（通常看 `stderr_tail`）
 
 ## curl 示例
 
@@ -96,6 +109,10 @@ Content-Type: application/json
 - 服务端使用 yt-dlp 下载封面图，并以图片文件（jpg/png/webp 之一）返回。
 - 如果找到 ffmpeg，会优先转换为 jpg；否则返回 yt-dlp 下载到的原始格式。
 - 连接断开后会清理临时文件。
+
+响应：
+- 成功：`200`，`Content-Type: image/jpeg|image/png|image/webp`
+- 失败：`4xx/5xx`，返回 JSON（见“失败响应”）
 
 示例：
 ```bash
