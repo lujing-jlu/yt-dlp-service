@@ -11,6 +11,7 @@
 - `GET /`：健康检查
 - `POST /download`：下载视频并返回 MP4
 - `POST /thumbnail`：提取封面并返回图片
+- `POST /info`：获取视频信息 JSON（不下载视频）
 
 ## 1. 健康检查
 
@@ -120,4 +121,27 @@ curl -L -X POST http://localhost:8080/thumbnail \
   -H "Content-Type: application/json" \
   -d '{"url":"https://www.youtube.com/watch?v=VIDEO_ID"}' \
   -o thumbnail.jpg
+```
+
+## 4. 获取视频信息（info）
+
+```
+POST /info
+Content-Type: application/json
+
+{
+  "url": "https://www.youtube.com/watch?v=VIDEO_ID",
+  "include_formats": false   // 可选，默认 false；为 true 时会包含 formats 列表（可能很大）
+}
+```
+
+说明：
+- 服务端调用 `yt-dlp -J` 获取视频信息（不下载视频文件）。
+- 返回 `application/json`。
+
+示例：
+```bash
+curl -s -X POST http://localhost:8080/info \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://www.youtube.com/watch?v=VIDEO_ID"}' | jq .
 ```

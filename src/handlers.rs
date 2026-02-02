@@ -129,6 +129,13 @@ pub struct ThumbnailRequest {
     pub url: String,
 }
 
+#[derive(Deserialize)]
+pub struct InfoRequest {
+    pub url: String,
+    // When false (default), we remove the usually-huge "formats" list from the response.
+    pub include_formats: Option<bool>,
+}
+
 pub async fn index() -> impl Responder {
     HttpResponse::Ok().json(serde_json::json!({
         "service": "YouTube Download Service",
@@ -136,7 +143,8 @@ pub async fn index() -> impl Responder {
         "endpoints": {
             "GET /": "Health check",
             "POST /download": "Download video then return the final mp4 (body: {url, mode})",
-            "POST /thumbnail": "Download thumbnail then return the image (body: {url})"
+            "POST /thumbnail": "Download thumbnail then return the image (body: {url})",
+            "POST /info": "Get video info JSON (body: {url, include_formats})"
         }
     }))
 }
@@ -502,4 +510,82 @@ pub async fn thumbnail(req: web::Json<ThumbnailRequest>, state: web::Data<AppSta
         ))
         .append_header((actix_web::http::header::CACHE_CONTROL, "no-store"))
         .streaming(body)
+}
+
+pub async fn info(req: web::Json<InfoRequest>, state: web::Data<AppState>) -> impl Responder {
+    let url = req.url.clone();
+    if url.trim().is_empty() {
+        return HttpResponse::BadRequest().json(serde_json::json!({
+            "error": "Missing url"
+        }));
+    }
+
+    let include_formats = req.include_formats.unwrap_or(false);
+
+    eprintln!("[INFO] Request: url={} include_formats={}", url, include_formats);
+
+    let permit = match state.limiter.clone().try_acquire_owned() {
+        Ok(p) => p,
+        Err(_) => {
+            return HttpResponse::TooManyRequests().json(serde_json::json!({
+                "error": format!("Too many concurrent downloads (max: {})", state.config.max_concurrent_downloads)
+            }));
+        }
+    };
+
+    if let Err(e) = cookies::ensure_cookies(state.config.as_ref(), state.cookie_lock.as_ref()).await {
+        return HttpResponse::InternalServerError().json(serde_json::json!({
+            "error": format!("Failed to refresh cookies: {}", e)
+        }));
+    }
+
+    let cfg = state.config.as_ref();
+    let mut cmd = build_ytdlp_base_command(cfg);
+    cmd.arg("--no-playlist")
+        .arg("-J")
+        .arg(url.as_str())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .kill_on_drop(true);
+
+    // Keep the concurrency slot held while we run yt-dlp.
+    let _permit: OwnedSemaphorePermit = permit;
+
+    let out = match cmd.output().await {
+        Ok(o) => o,
+        Err(e) => {
+            return HttpResponse::BadGateway().json(serde_json::json!({
+                "error": format!("Failed to run yt-dlp: {}", e),
+            }));
+        }
+    };
+
+    if !out.status.success() {
+        let stderr_tail = String::from_utf8_lossy(&out.stderr).to_string();
+        return HttpResponse::BadGateway().json(serde_json::json!({
+            "error": format!("yt-dlp exited with error (status={})", out.status),
+            "stderr_tail": stderr_tail
+        }));
+    }
+
+    let mut v: serde_json::Value = match serde_json::from_slice(&out.stdout) {
+        Ok(v) => v,
+        Err(e) => {
+            return HttpResponse::BadGateway().json(serde_json::json!({
+                "error": format!("Failed to parse yt-dlp JSON: {}", e),
+            }));
+        }
+    };
+
+    if !include_formats {
+        if let Some(obj) = v.as_object_mut() {
+            obj.remove("formats");
+            obj.remove("requested_formats");
+        }
+    }
+
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .append_header((actix_web::http::header::CACHE_CONTROL, "no-store"))
+        .json(v)
 }
