@@ -75,9 +75,13 @@ fn build_ytdlp_base_command(cfg: &crate::config::AppConfig) -> Command {
         cmd.arg("--proxy").arg(p);
     }
 
-    cmd.arg("--cookies")
-        .arg(cfg.cookies_file.to_string_lossy().as_ref())
-        .arg("--js-runtimes")
+    if cfg.cookies_source == "browser" {
+        cmd.arg("--cookies-from-browser").arg(cfg.cookies_browser.as_str());
+    } else {
+        cmd.arg("--cookies").arg(cfg.cookies_file.to_string_lossy().as_ref());
+    }
+
+    cmd.arg("--js-runtimes")
         .arg("node")
         .arg("--no-playlist")
         .arg("--no-cache-dir")

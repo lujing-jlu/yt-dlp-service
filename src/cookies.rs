@@ -76,6 +76,11 @@ pub fn needs_refresh(cfg: &AppConfig) -> bool {
 }
 
 pub async fn ensure_cookies(cfg: &AppConfig, cookie_lock: &AsyncMutex<()>) -> Result<()> {
+    if cfg.cookies_source != "file" {
+        // In browser mode, we rely on `--cookies-from-browser` at runtime.
+        return Ok(());
+    }
+
     // Avoid multiple concurrent refreshes under load (and avoid writing cookies file concurrently).
     let _guard = cookie_lock.lock().await;
     if needs_refresh(cfg) {

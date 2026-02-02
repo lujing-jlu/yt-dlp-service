@@ -50,6 +50,11 @@ Content-Type: application/json
 
 常用配置项（示例）：
 ```toml
+# cookies_source:
+# - "browser": 服务端运行 yt-dlp 时用 --cookies-from-browser（macOS 推荐）
+# - "file": 服务端运行 yt-dlp 时用 cookies_file（由你自行维护 cookies_file）
+cookies_source = "browser"
+
 # YouTube 访问需要代理时，推荐显式设置（不要依赖 http_proxy/https_proxy 环境变量）
 ytdlp_proxy = "socks5://127.0.0.1:7890"
 

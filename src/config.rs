@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use serde::Deserialize;
 
 #[derive(Debug, Clone)]
@@ -9,6 +9,8 @@ pub struct AppConfig {
     pub listen_addr: String,
     pub max_concurrent_downloads: usize,
 
+    // "browser" (default) or "file"
+    pub cookies_source: String,
     pub cookies_file: PathBuf,
     pub cookies_browser: String,
     pub cookies_refresh_max_age_secs: u64,
@@ -27,6 +29,7 @@ struct AppConfigFile {
     listen_addr: Option<String>,
     max_concurrent_downloads: Option<usize>,
 
+    cookies_source: Option<String>,
     cookies_file: Option<String>,
     cookies_browser: Option<String>,
     cookies_refresh_max_age_secs: Option<u64>,
@@ -58,10 +61,14 @@ impl AppConfig {
 
         let file: AppConfigFile = toml::from_str(&raw).context("Failed to parse config.toml")?;
 
-        Ok(Self {
+        let cfg = Self {
             listen_addr: file.listen_addr.unwrap_or_else(|| "0.0.0.0:8080".to_string()),
             max_concurrent_downloads: file.max_concurrent_downloads.unwrap_or(5),
 
+            cookies_source: file
+                .cookies_source
+                .unwrap_or_else(|| "browser".to_string())
+                .to_ascii_lowercase(),
             cookies_file: PathBuf::from(file.cookies_file.unwrap_or_else(|| "cookies.txt".to_string())),
             cookies_browser: file.cookies_browser.unwrap_or_else(|| "edge".to_string()),
             cookies_refresh_max_age_secs: file.cookies_refresh_max_age_secs.unwrap_or(1800),
@@ -83,6 +90,15 @@ impl AppConfig {
                     if s.is_empty() { None } else { Some(s) }
                 }),
             inherit_proxy_env: file.inherit_proxy_env.unwrap_or(false),
-        })
+        };
+
+        if cfg.cookies_source != "browser" && cfg.cookies_source != "file" {
+            return Err(anyhow!(
+                "Invalid cookies_source: {} (expected: browser|file)",
+                cfg.cookies_source
+            ));
+        }
+
+        Ok(cfg)
     }
 }

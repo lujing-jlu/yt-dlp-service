@@ -5,6 +5,10 @@ listen_addr = "0.0.0.0:8080"
 max_concurrent_downloads = 5
 
 # Cookies (exported from browser)
+# cookies_source:
+# - "browser": use --cookies-from-browser at runtime (recommended on macOS)
+# - "file": use cookies_file at runtime (you manage cookies_file yourself)
+cookies_source = "browser"
 cookies_file = "cookies.txt"
 cookies_browser = "edge"
 cookies_refresh_max_age_secs = 1800
